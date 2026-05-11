@@ -1,0 +1,19 @@
+return {
+    {
+        name = "🌀 วนบอส",
+        type = "sub",
+        menu = {
+            { name = "🐉 SPโคดัล", file = "บักจ่อย2.lua", action = "sp" },
+            { name = "🐉 วาปบอส 2", file = "บักจ่อย2.lua", action = "boss2" },
+            { name = "🐉 วาปบอส 3", file = "บักจ่อย2.lua", action = "boss3" }
+        }
+    },
+    {
+        name = "🗺️ วาปนาวา",
+        type = "sub",
+        menu = {
+            { name = "🐉 นาวาบอส", file = "บักจ่อย2.lua", action = "boss" },
+            { name = "🗺️ นาวาแมพ", file = "บักจ่อย2.lua", action = "map" }
+        }
+    }
+}
