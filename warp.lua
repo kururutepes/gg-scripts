@@ -1,40 +1,88 @@
--- Iruna Online TH
--- ครั้งแรกค้นหา 256;256;58::9 Dword → เซฟ → ครั้งต่อไปใช้เซฟได้เลย
--- ใช้ต่อเนื่อง: แตะไอคอน GG → เมนูโผล่ → กดวาป → วาป + พับทันที (ไม่ต้องรอ)
--- อยากวาปอีก: แตะไอคอน GG อีก → เมนูโผล่เลย
+-- warp.lua - เพิ่มส่วนนี้
 
-gg.clearResults()
-gg.setVisible(false)
-gg.setRanges(gg.REGION_JAVA_HEAP | gg.REGION_ANONYMOUS | gg.REGION_C_ALLOC)
+-- ==================== ตั้งค่า ====================
+-- นาวาบอส (action = "boss")
+local BOSS_X     = 20244
+local BOSS_Y     = 10240
+local BOSS_MAP   = 80010
+local BOSS_WANWA = 16777215
 
--- ==================== ตั้งค่าแก้ไขเองได้ตรงนี้ ====================
-local BOSS_X     = 20244    -- นาวาบอส X
-local BOSS_Y     = 10240    -- นาวาบอส Y
-local BOSS_MAP   = 80010    -- นาวาบอส แมพ
-local BOSS_WANWA = 16777215 -- นาวาบอส วนวาป
+-- นาวาแมพ (action = "map")
+local MAP_X      = 20224
+local MAP_Y      = 10240
+local MAP_MAP    = 80000
+local MAP_WANWA  = 16777215
 
-local MAP_X      = 20224    -- นาวาแมพ X
-local MAP_Y      = 10240    -- นาวาแมพ Y
-local MAP_MAP    = 80000    -- นาวาแมพ แมพ
-local MAP_WANWA  = 16777215 -- นาวาแมพ วนวาป
--- ================================================================
+-- ซนบอส 1 (action = "boss1") ← ใส่ค่าเอง!
+local BOSS1_X     = 0
+local BOSS1_Y     = 0
+local BOSS1_MAP   = 0
+local BOSS1_WANWA = 0
 
-local OFF_WANWA = -74
-local OFF_MAP   = -105
-local OFF_X     = -120
-local OFF_Y     = -122
+-- ซนบอส 2 (action = "boss2") ← ใส่ค่าเอง!
+local BOSS2_X     = 0
+local BOSS2_Y     = 0
+local BOSS2_MAP   = 0
+local BOSS2_WANWA = 0
 
-local base = nil
+-- ซนบอส 3 (action = "boss3") ← ใส่ค่าเอง!
+local BOSS3_X     = 0
+local BOSS3_Y     = 0
+local BOSS3_MAP   = 0
+local BOSS3_WANWA = 0
+-- ==================================================
 
--- ลองดึง base จากค่าที่เซฟไว้ใน Saved List
-local saved = gg.getListItems()
-for _, item in ipairs(saved) do
-    if item.name == "ค่าวนวาป" then
-        base = item.address + (74 * 4)
-        break
-    end
+-- ... (ส่วนค้นหา base เหมือนเดิม) ...
+
+-- เลือกค่าตาม action
+local apply = {}
+local name = ""
+
+if action == "boss" then
+    name = "นาวาบอส"
+    apply = {
+        {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, value = BOSS_WANWA},
+        {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, value = BOSS_MAP},
+        {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = BOSS_X},
+        {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = BOSS_Y},
+    }
+elseif action == "map" then
+    name = "นาวาแมพ"
+    apply = {
+        {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, value = MAP_WANWA},
+        {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, value = MAP_MAP},
+        {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = MAP_X},
+        {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = MAP_Y},
+    }
+elseif action == "boss1" then
+    name = "ซนบอส 1"
+    apply = {
+        {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, value = BOSS1_WANWA},
+        {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, value = BOSS1_MAP},
+        {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = BOSS1_X},
+        {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = BOSS1_Y},
+    }
+elseif action == "boss2" then
+    name = "ซนบอส 2"
+    apply = {
+        {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, value = BOSS2_WANWA},
+        {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, value = BOSS2_MAP},
+        {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = BOSS2_X},
+        {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = BOSS2_Y},
+    }
+elseif action == "boss3" then
+    name = "ซนบอส 3"
+    apply = {
+        {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, value = BOSS3_WANWA},
+        {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, value = BOSS3_MAP},
+        {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = BOSS3_X},
+        {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = BOSS3_Y},
+    }
 end
 
+gg.setValues(apply)
+gg.toast("✅ วาป" .. name .. " สำเร็จ!")
+gg.setVisible(false)
 -- ถ้ายังไม่มีเซฟ → ค้นหาครั้งแรก
 if base == nil then
     gg.searchNumber("256;256;58::9", gg.TYPE_DWORD)
