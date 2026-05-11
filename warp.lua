@@ -1,4 +1,7 @@
--- warp.lua - เพิ่มส่วนนี้
+-- warp.lua - ระบบวาปรวม
+gg.clearResults()
+gg.setVisible(false)
+gg.setRanges(gg.REGION_JAVA_HEAP | gg.REGION_ANONYMOUS | gg.REGION_C_ALLOC)
 
 -- ==================== ตั้งค่า ====================
 -- นาวาบอส (action = "boss")
@@ -30,9 +33,60 @@ local BOSS3_X     = 0
 local BOSS3_Y     = 0
 local BOSS3_MAP   = 0
 local BOSS3_WANWA = 0
+
+local OFF_WANWA = -74
+local OFF_MAP   = -105
+local OFF_X     = -120
+local OFF_Y     = -122
+
+local action = ... or "boss"
 -- ==================================================
 
--- ... (ส่วนค้นหา base เหมือนเดิม) ...
+-- หา base จาก Saved List
+local saved = gg.getListItems()
+local base = nil
+for _, item in ipairs(saved) do
+    if item.name == "ค่าวนวาป" then
+        base = item.address + (74 * 4)
+        break
+    end
+end
+
+-- ถ้าไม่มี -> ค้นหาครั้งแรก
+if base == nil then
+    gg.searchNumber("256;256;58::9", gg.TYPE_DWORD)
+    if gg.getResultsCount() == 0 then
+        gg.alert("❌ ไม่พบฐานวาป\nกรุณาอยู่ในแผนที่ก่อนใช้")
+        return
+    end
+
+    gg.refineNumber("256", gg.TYPE_DWORD)
+    local r = gg.getResults(gg.getResultsCount())
+    if #r == 0 then
+        gg.alert("❌ ไม่พบ 256")
+        return
+    end
+
+    for _, v in ipairs(r) do
+        if v.value == 256 then
+            base = v.address
+            break
+        end
+    end
+
+    if base == nil then
+        gg.alert("❌ ไม่พบ 256 ตัวแรก")
+        return
+    end
+
+    gg.clearResults()
+    gg.addListItems({
+        {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, name = "ค่าวนวาป"},
+        {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, name = "ค่าวาปแมพ"},
+        {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, name = "วาป X"},
+        {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, name = "วาป Y"},
+    })
+end
 
 -- เลือกค่าตาม action
 local apply = {}
@@ -77,102 +131,6 @@ elseif action == "boss3" then
         {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, value = BOSS3_MAP},
         {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = BOSS3_X},
         {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = BOSS3_Y},
-    }
-end
-
-gg.setValues(apply)
-gg.toast("✅ วาป" .. name .. " สำเร็จ!")
-gg.setVisible(false)
--- ถ้ายังไม่มีเซฟ → ค้นหาครั้งแรก
-if base == nil then
-    gg.searchNumber("256;256;58::9", gg.TYPE_DWORD)
-    if gg.getResultsCount() == 0 then
-        gg.alert("ไม่พบผลลัพธ์")
-        return
-    end
-
-    gg.refineNumber("256", gg.TYPE_DWORD)
-    local r = gg.getResults(gg.getResultsCount())
-    if #r == 0 then
-        gg.alert("ไม่พบ 256")
-        return
-    end
-
-    for i, v in ipairs(r) do
-        if v.value == 256 then
-            base = v.address
-            break
-        end
-    end
-
-    if base == nil then
-        gg.alert("ไม่พบ 256 ตัวแรก")
-        return
-    end
-
-    -- เซฟครั้งแรกลง Saved List
-    gg.clearResults()
-    gg.addListItems({
-        {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, name = "ค่าวนวาป"},
-        {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, name = "ค่าวาปแมพ"},
-        {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, name = "วาป X"},
-        {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, name = "วาป Y"},
-    })
-end
-
--- ==================== ฟังก์ชันวาป (เร็ว ไม่มี toast) ====================
-local function warp(choice)
-    local apply = {}
-    if choice == 1 then
-        apply = {
-            {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, value = BOSS_WANWA},
-            {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, value = BOSS_MAP},
-            {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = BOSS_X},
-            {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = BOSS_Y},
-        }
-    else
-        apply = {
-            {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, value = MAP_WANWA},
-            {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, value = MAP_MAP},
-            {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = MAP_X},
-            {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = MAP_Y},
-        }
-    end
-
-    gg.setValues(apply)
-    gg.setVisible(false) -- วาปเสร็จ → พับ GG ทันที (ไม่ต้อง toast)
-end
-
--- ==================== วนลูปหลัก ====================
-while true do
-    -- รอจนกว่าจะแตะไอคอน GG
-    while not gg.isVisible() do
-        gg.sleep(100) -- เช็คถี่ขึ้น = ไวขึ้น
-    end
-
-    -- แสดงเมนูวาป
-    local menu = gg.choice({
-        "🐉 นาวาบอส",
-        "🗺️ นาวาแมพ",
-        "❌ ออก",
-    })
-
-    if menu == nil or menu == 3 then
-        gg.setVisible(false)
-        break
-    else
-        warp(menu)
-    end
-end        {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = BOSS_X},
-        {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = BOSS_Y},
-    }
-else
-    name = "แมพ"
-    apply = {
-        {address = base + (OFF_WANWA * 4), flags = gg.TYPE_DWORD, value = MAP_WANWA},
-        {address = base + (OFF_MAP * 4),   flags = gg.TYPE_DWORD, value = MAP_MAP},
-        {address = base + (OFF_X * 4),     flags = gg.TYPE_DWORD, value = MAP_X},
-        {address = base + (OFF_Y * 4),     flags = gg.TYPE_DWORD, value = MAP_Y},
     }
 end
 
