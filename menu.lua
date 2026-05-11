@@ -1,7 +1,7 @@
 -- menu.lua - รายการฟังก์ชันทั้งหมด
 return {
     {
-        name = "🌀 ซนบอส",
+        name = "🌀 วนบอส",
         type = "sub",
         menu = {
             { name = "🐉 วาปบอส 1", file = "warp.lua", action = "boss1" },
